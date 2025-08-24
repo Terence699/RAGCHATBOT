@@ -71,6 +71,24 @@ Exit code 0 = all checks pass, non-zero = issues found.
 #### Troubleshooting
 If scripts aren't executable: `chmod +x scripts/*.sh`
 
+### Testing
+```bash
+# Run all tests
+uv run pytest
+
+# Run specific test categories
+uv run pytest -m "unit"
+uv run pytest -m "integration" 
+uv run pytest -m "api"
+uv run pytest -m "slow"
+
+# Run single test file
+uv run pytest backend/tests/test_vector_store.py
+
+# Verbose output with details
+uv run pytest -v
+```
+
 ### Application Access
 - Web Interface: http://localhost:8000
 - API Documentation: http://localhost:8000/docs

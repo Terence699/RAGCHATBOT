@@ -68,8 +68,38 @@ Use this script to verify code quality without modifying files. Perfect for:
 
 Exit code 0 = all checks pass, non-zero = issues found.
 
+#### Configuration Files
+The project includes comprehensive quality tool configuration:
+
+- `pyproject.toml`: Main configuration for Black, isort, and mypy
+  - Black: 88 character line length, Python 3.13 target
+  - isort: Black-compatible profile with proper import organization
+  - mypy: Strict type checking enabled with comprehensive rules
+- `.flake8`: Flake8 configuration file for linting rules
+  - 88 character line length (compatible with Black)
+  - Ignores E203 (whitespace before ':') and W503 (line break before operator)
+
 #### Troubleshooting
 If scripts aren't executable: `chmod +x scripts/*.sh`
+
+#### Quality Tools Status
+✅ **Configured and Active:**
+- Black (automatic code formatting)
+- isort (import sorting)
+- flake8 (style and complexity linting)
+- mypy (static type checking)
+
+✅ **Scripts Available:**
+- `./scripts/format.sh` - Auto-format code and fix style issues
+- `./scripts/lint.sh` - Read-only quality checks for CI/CD
+
+⚠️ **Known Quality Issues:**
+The codebase has some remaining quality improvements that can be addressed:
+- Long lines in docstrings and complex expressions
+- Type annotations missing in some test functions
+- Import order in test files (intentional due to sys.path setup)
+
+These issues don't affect functionality and can be addressed incrementally.
 
 ### Testing
 ```bash

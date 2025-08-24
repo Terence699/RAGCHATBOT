@@ -1,11 +1,15 @@
 import os
 import sys
 import tempfile
-from typing import Any, Dict, List
-from unittest.mock import MagicMock, Mock, patch
+from typing import List, Optional
+from unittest.mock import Mock
 
 import pytest
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.testclient import TestClient
+from pydantic import BaseModel
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -259,11 +263,14 @@ def mock_rag_system():
     mock.query.return_value = (
         "This is a test response about course content.",
         ["Building Towards Computer Use with Anthropic - Lesson 1"],
-        ["https://example.com/lesson1"]
+        ["https://example.com/lesson1"],
     )
     mock.get_course_analytics.return_value = {
         "total_courses": 2,
-        "course_titles": ["Building Towards Computer Use with Anthropic", "Advanced AI Techniques"]
+        "course_titles": [
+            "Building Towards Computer Use with Anthropic",
+            "Advanced AI Techniques",
+        ],
     }
     mock.session_manager.create_session.return_value = "test-session-123"
     mock.session_manager.clear_session.return_value = None
@@ -273,15 +280,10 @@ def mock_rag_system():
 @pytest.fixture
 def test_app():
     """Create a test FastAPI app with mocked dependencies"""
-    from fastapi import FastAPI
-    from fastapi.middleware.cors import CORSMiddleware
-    from fastapi.middleware.trustedhost import TrustedHostMiddleware
-    from pydantic import BaseModel
-    from typing import List, Optional
-    
+
     # Create test app without static file mounting
     app = FastAPI(title="Course Materials RAG System Test", root_path="")
-    
+
     # Add middleware
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])
     app.add_middleware(
@@ -292,7 +294,7 @@ def test_app():
         allow_headers=["*"],
         expose_headers=["*"],
     )
-    
+
     # Pydantic models
     class QueryRequest(BaseModel):
         query: str
@@ -310,21 +312,24 @@ def test_app():
 
     class ClearSessionRequest(BaseModel):
         session_id: str
-    
+
     # Mock RAG system
     mock_rag = Mock()
     mock_rag.query.return_value = (
         "This is a test response about course content.",
         ["Building Towards Computer Use with Anthropic - Lesson 1"],
-        ["https://example.com/lesson1"]
+        ["https://example.com/lesson1"],
     )
     mock_rag.get_course_analytics.return_value = {
         "total_courses": 2,
-        "course_titles": ["Building Towards Computer Use with Anthropic", "Advanced AI Techniques"]
+        "course_titles": [
+            "Building Towards Computer Use with Anthropic",
+            "Advanced AI Techniques",
+        ],
     }
     mock_rag.session_manager.create_session.return_value = "test-session-123"
     mock_rag.session_manager.clear_session.return_value = None
-    
+
     # API endpoints
     @app.post("/api/query", response_model=QueryResponse)
     async def query_documents(request: QueryRequest):
@@ -334,7 +339,7 @@ def test_app():
             answer=answer,
             sources=sources,
             source_links=source_links,
-            session_id=session_id
+            session_id=session_id,
         )
 
     @app.get("/api/courses", response_model=CourseStats)
@@ -342,18 +347,18 @@ def test_app():
         analytics = mock_rag.get_course_analytics()
         return CourseStats(
             total_courses=analytics["total_courses"],
-            course_titles=analytics["course_titles"]
+            course_titles=analytics["course_titles"],
         )
 
     @app.post("/api/clear-session")
     async def clear_session(request: ClearSessionRequest):
         mock_rag.session_manager.clear_session(request.session_id)
         return {"status": "success", "message": "Session cleared successfully"}
-    
+
     @app.get("/")
     async def root():
         return {"message": "Course Materials RAG System API"}
-    
+
     return app
 
 
@@ -366,15 +371,10 @@ def client(test_app):
 @pytest.fixture
 def sample_query_request():
     """Sample query request for testing"""
-    return {
-        "query": "What is computer use in AI?",
-        "session_id": "test-session-123"
-    }
+    return {"query": "What is computer use in AI?", "session_id": "test-session-123"}
 
 
 @pytest.fixture
 def sample_clear_session_request():
     """Sample clear session request for testing"""
-    return {
-        "session_id": "test-session-123"
-    }
+    return {"session_id": "test-session-123"}
